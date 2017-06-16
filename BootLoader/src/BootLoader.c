@@ -18,14 +18,15 @@ u16 crc_data;
 uint32_t exe_type = 0x00;
 Boot_CMD_LIST cmd_list =
 {
-	.Erase = 0x0F,      //擦除APP区域数据
-	.WriteInfo = 0x01,//设置多字节写数据相关参数(写起始地址,数据量)
-	.Write = 0x02,//以多字节形式写数据
-	.Check = 0x03,//检测节点是否在线，同时返回固件信息
+	.Erase       = 0x0F, //擦除APP区域数据
+	.Write       = 0x02,//以多字节形式写数据
+	.Check       = 0x03,//检测节点是否在线，同时返回固件信息
+	.Excute      = 0x05,//执行固件
+	.CmdFaild    = 0x09,//命令执行失败
+	.WriteInfo   = 0x01,//设置多字节写数据相关参数(写起始地址,数据量)
+	.CmdSuccess  = 0x08,//命令执行成功
 	.SetBaudRate = 0x04,//设置节点波特率
-	.Excute = 0x05,//执行固件
-	.CmdSuccess = 0x08,//命令执行成功
-	.CmdFaild = 0x09,//命令执行失败
+
 };
 Device_INFO DEVICE_INFO =
 {

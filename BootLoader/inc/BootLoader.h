@@ -56,14 +56,16 @@ typedef struct _Boot_CMD_LIST
 {
 	//Bootloader相关命令
 	unsigned char Erase;        //擦出APP储存扇区数据
-	unsigned char WriteInfo;    //设置多字节写数据相关参数（写起始地址，数据量）
 	unsigned char Write;        //以多字节形式写数据
 	unsigned char Check;        //检测节点是否在线，同时返回固件信息
-	unsigned char SetBaudRate;  //设置节点波特率
 	unsigned char Excute;       //执行固件
+	unsigned char WriteInfo;    //设置多字节写数据相关参数（写起始地址，数据量）
+	unsigned char SetBaudRate;  //设置节点波特率
+
 	//节点返回状态
-	unsigned char CmdSuccess;   //命令执行成功
 	unsigned char CmdFaild;     //命令执行失败
+	unsigned char CmdSuccess;   //命令执行成功
+
 } Boot_CMD_LIST;
 extern Boot_CMD_LIST cmd_list;
 extern bootloader_data Bootloader_data;
