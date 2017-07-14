@@ -11,14 +11,14 @@ MEMORY
 	ZONE6  : origin = 0x0100000, length = 0x100000 /* XINTF zone 6 */
 	ZONE7A : origin = 0x0200000, length = 0x00FC00 /* XINTF zone 7 - program space */
 	/*-----------------------------------------------------------------------------*/
-	FLASHH : origin = 0x300000, length = 0x008000 /* on-chip FLASH */
-	FLASHG : origin = 0x308000, length = 0x008000 /* on-chip FLASH */
-	FLASHF : origin = 0x310000, length = 0x008000 /* on-chip FLASH */
-	FLASHE : origin = 0x318000, length = 0x008000 /* on-chip FLASH */
-	FLASHD : origin = 0x320000, length = 0x008000 /* on-chip FLASH */
-	FLASHC : origin = 0x328000, length = 0x008000 /* on-chip FLASH */
-	FLASHB : origin = 0x330000, length = 0x008000 /* on-chip FLASH */
-	FLASHA : origin = 0x338000, length = 0x007F80 /* on-chip FLASH */
+	FLASHH : origin = 0x300000, length = 0x008000
+	FLASHG : origin = 0x308000, length = 0x008000
+	FLASHF : origin = 0x310000, length = 0x008000
+	FLASHE : origin = 0x318000, length = 0x008000
+	FLASHD : origin = 0x320000, length = 0x008000
+	FLASHC : origin = 0x328000, length = 0x008000
+	FLASHB : origin = 0x330000, length = 0x008000
+	FLASHA : origin = 0x338000, length = 0x007F80
 	/*-----------------------------------------------------------------------------*/
 	CSM_RSVD : origin = 0x33FF80, length = 0x000076 /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
 	BEGIN     : origin = 0x33FFF6, length = 0x000002 /* Part of FLASHA.  Used for "boot to Flash" bootloader mode. */
@@ -33,9 +33,7 @@ MEMORY
 	RESET     : origin = 0x3FFFC0, length = 0x000002 /* part of boot ROM  */
 	VECTORS   : origin = 0x3FFFC2, length = 0x00003E /* part of boot ROM  */
 
-	PAGE 1 : /* Data Memory */
-	/* Memory (RAM/FLASH/OTP) blocks can be moved to PAGE0 for program allocation */
-	/* Registers remain on PAGE1                                                  */
+	PAGE 1 :
 
 	BOOT_RSVD : origin = 0x000000, length = 0x000050 /* Part of M0, BOOT rom will use this for stack */
 	RAMM0     : origin = 0x000050, length = 0x0003B0 /* on-chip RAM block M0 */
@@ -47,18 +45,8 @@ MEMORY
 	ZONE7B    : origin = 0x20FC00, length = 0x000400 /* XINTF zone 7 - data space */
 
 }
-
-/* Allocate sections to memory blocks.
- Note:
- codestart user defined section in DSP28_CodeStartBranch.asm used to redirect code
- execution when booting to flash
- ramfuncs  user defined section to store functions that will be copied from Flash into RAM
- */
-
 SECTIONS
 {
-
-	/* Allocate program areas: */
 	.cinit    : > FLASHH PAGE = 0
 	.pinit    : > FLASHH, PAGE = 0
 	.text     : > FLASHH PAGE = 0
