@@ -5,10 +5,11 @@
  *      Author: admin
  */
 #include "BootLoader.h"
+#define DATA_LEN  520
 typedef  void (*pFunction)(void);
 bootloader_data Boot_ID_info;
-u8	   data_temp[128];
-Uint16 write_temp[128];
+u8	   data_temp[DATA_LEN*2];
+Uint16 write_temp[DATA_LEN];
 u8 can_cmd    = 0x00;//ID的bit0~bit3位为命令码
 u16 can_addr  = 0x00;//ID的bit4~bit15位为节点地址
 u32 start_addr = 0x0000;//每一包数据的起始地址
@@ -191,7 +192,7 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		//该函数在Bootloader程序中必须实现，APP程序可以不用实现
 		if(can_cmd == cmd_list.Write)
 		{
-			if((data_index<data_size)&&(data_index<128))
+			if((data_index<data_size)&&(data_index<DATA_LEN*2))
 			{
 				__set_PRIMASK(1);//关闭全局中断
 				for(i=0;i<pRxMessage->DLC;i++)
@@ -200,7 +201,7 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 				}
 				__set_PRIMASK(0);//打开全局中断
 			}
-			if((data_index>=data_size)||(data_index>=(128-2)))
+			if((data_index>=data_size)||(data_index>=(DATA_LEN*2-2)))
 			{
 				crc_data = CRCcalc16(data_temp,data_size-2);//对接收到的数据做CRC校验，保证数据完整性
 				if(crc_data==((data_temp[data_size-2])|(data_temp[data_size-1]<<8)))
