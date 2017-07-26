@@ -19,7 +19,7 @@ u16 crc_data;
 uint32_t exe_type = 0x00;
 Boot_CMD_LIST cmd_list =
 {
-	.Erase       = 0x0F, //擦除APP区域数据
+	.Erase       = 0x00, //擦除APP区域数据
 	.Write       = 0x02,//以多字节形式写数据
 	.Check       = 0x03,//检测节点是否在线，同时返回固件信息
 	.Excute      = 0x05,//执行固件
@@ -31,7 +31,7 @@ Boot_CMD_LIST cmd_list =
 };
 Device_INFO DEVICE_INFO =
 {
-.FW_TYPE = CAN_BL_BOOT,
+//.FW_TYPE = CAN_BL_BOOT,
 .FW_Version = 0x0010001,
 };
 void __disable_irq(void)
@@ -94,6 +94,8 @@ void CAN_BOOT_JumpToApplication(uint32_t Addr)
 void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 {
 	u8 i;
+	DEVICE_INFO.FW_TYPE.bits.FW_TYPE = 0x555555;
+	DEVICE_INFO.FW_TYPE.bits.Chip_Value = 0x55;
 	CanTxMsg TxMessage;//发送对应消息
 	Uint16 ret = 0x01;
 	FLASH_ST Flash_Status;
@@ -287,10 +289,10 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (u8)(DEVICE_INFO.FW_Version>>16);
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[2] = (u8)(DEVICE_INFO.FW_Version>>8);//次版本号，两字节
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[3] = (u8)(DEVICE_INFO.FW_Version>>0);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[4] = (u8)(DEVICE_INFO.FW_TYPE>>24);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[5] = (u8)(DEVICE_INFO.FW_TYPE>>16);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[6] = (u8)(DEVICE_INFO.FW_TYPE>>8);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[7] = (u8)(DEVICE_INFO.FW_TYPE>>0);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[4] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>16);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[5] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>8);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[6] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>0);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[7] = (u8)(DEVICE_INFO.FW_TYPE.bits.Chip_Value>>0);
 				TxMessage.DLC = 8;
 				CAN_Tx_Msg(&TxMessage);
 			}

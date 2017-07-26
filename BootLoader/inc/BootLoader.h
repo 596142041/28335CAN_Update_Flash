@@ -33,7 +33,16 @@ typedef struct _Device_INFO
 			unsigned short int reserve:	4;
 		}bits;//设备地址
 	}Device_addr;
-	unsigned long int FW_TYPE;//固件类型
+	union
+	{
+		unsigned long int all;
+		struct
+		{
+			unsigned long int FW_TYPE:24;
+			unsigned long int Chip_Value:8;
+		}bits;
+	}FW_TYPE;
+	//unsigned long int FW_TYPE;//固件类型
 	unsigned long int FW_Version;//固件版本
 }Device_INFO;
 typedef struct _bootloader_data
