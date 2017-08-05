@@ -1,21 +1,3 @@
-// TI File $Revision: /main/3 $
-// Checkin $Date: February 5, 2008   11:10:02 $
-//###########################################################################
-//
-// FILE:  Flash2833x_API_Library.h	
-//
-// TITLE: F2833x Flash Algo's main include file
-//
-// DESCRIPTION:
-//
-//       This file should be included in any project that uses any of the
-//       the F2833x flash APIs.    
-//
-//###########################################################################
-// $TI Release:$
-// $Release Date:$
-//###########################################################################
-
 #ifndef FLASH2833X_API_LIBRARY_H
 #define FLASH2833X_API_LIBRARY_H
 
