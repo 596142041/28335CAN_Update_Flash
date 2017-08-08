@@ -14,7 +14,7 @@
 #include "stdint.h"
 #include "CANA.h"
 #include "Flash.h"
-#define APP_START_ADDR  ((uint32_t)0x310000)
+#define APP_START_ADDR  ((uint32_t)0x310010)
 #define CAN_BL_APP      0xAAAAAAAA
 #define CAN_BL_BOOT     0x55555555
 //#define FW_TYPE         CAN_BL_BOOT
