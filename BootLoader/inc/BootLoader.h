@@ -15,13 +15,19 @@
 #include "CANA.h"
 #include "Flash.h"
 #define APP_START_ADDR  ((uint32_t)0x310010)
-#define CAN_BL_APP      0xAAAAAAAA
-#define CAN_BL_BOOT     0x55555555
+#define APP_INFO_ADDR   ((uint32_t)0x310000)
+#define CAN_BL_APP      0xAAAAAA
+#define CAN_BL_BOOT     0x555555
 //#define FW_TYPE         CAN_BL_BOOT
 #define DEVICE_ADDR 0x134//设备地址
 #define CAN_BOOT_GetAddrData() 0x0134
 #define CMD_WIDTH 4
 #define ADDR_WIDTH 12
+//----------------------以下宏定义是对芯片型号进行宏定义----------------------------
+#define TMS320F28335      1
+#define TMS230F2808       2
+#define STM32F407IGT6     3
+//---------------------------------------------------
 typedef struct _Device_INFO
 {
 	union
@@ -38,11 +44,10 @@ typedef struct _Device_INFO
 		unsigned long int all;
 		struct
 		{
-			unsigned long int FW_TYPE:24;
-			unsigned long int Chip_Value:8;
+			unsigned long int FW_TYPE:24;//固件类型
+			unsigned long int Chip_Value:8;//控制器芯片类型
 		}bits;
 	}FW_TYPE;
-	//unsigned long int FW_TYPE;//固件类型
 	unsigned long int FW_Version;//固件版本
 }Device_INFO;
 typedef struct _bootloader_data
@@ -86,4 +91,5 @@ void __set_PRIMASK(u8 state);
 unsigned short int CRCcalc16 (unsigned char *data,unsigned short int len);
 void CAN_BOOT_JumpToApplication(uint32_t Addr);
 void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage);
+unsigned short int Check_APP(uint32_t Addr);
 #endif /* BOOTLOADER_BOOTLOADER_H_ */
