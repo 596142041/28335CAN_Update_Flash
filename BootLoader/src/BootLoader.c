@@ -20,18 +20,16 @@ uint32_t exe_type = 0x00;
 Boot_CMD_LIST cmd_list =
 {
 	.Erase       = 0x00, //擦除APP区域数据
-	.Write       = 0x02,//以多字节形式写数据
-	.Check       = 0x03,//检测节点是否在线，同时返回固件信息
-	.Excute      = 0x05,//执行固件
-	.CmdFaild    = 0x09,//命令执行失败
-	.WriteInfo   = 0x01,//设置多字节写数据相关参数(写起始地址,数据量)
-	.CmdSuccess  = 0x08,//命令执行成功
-	.SetBaudRate = 0x04,//设置节点波特率
-
+	.Write       = 0x02, //以多字节形式写数据
+	.Check       = 0x03, //检测节点是否在线，同时返回固件信息
+	.Excute      = 0x05, //执行固件
+	.CmdFaild    = 0x09, //命令执行失败
+	.WriteInfo   = 0x01, //设置多字节写数据相关参数(写起始地址,数据量)
+	.CmdSuccess  = 0x08, //命令执行成功
+	.SetBaudRate = 0x04, //设置节点波特率
 };
 Device_INFO DEVICE_INFO =
 {
-//.FW_TYPE = CAN_BL_BOOT,
 .FW_Version = 0x0010001,
 };
 void __disable_irq(void)
@@ -95,7 +93,7 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 {
 	u8 i;
 	DEVICE_INFO.FW_TYPE.bits.FW_TYPE = 0x555555;
-	DEVICE_INFO.FW_TYPE.bits.Chip_Value = 0x55;
+	DEVICE_INFO.FW_TYPE.bits.Chip_Value = TMS320F28335;
 	CanTxMsg TxMessage;//发送对应消息
 	Uint16 ret = 0x01;
 	FLASH_ST Flash_Status;
@@ -301,10 +299,9 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		//该命令在Bootloader和APP程序中都必须实现
 		if(can_cmd == cmd_list.Excute)//该命令在DSP中已经实现
 		{
-			exe_type  = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<24)|\
-						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<16)|\
-						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<8)|\
-						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[3])&0x000000FF)<<0);
+			exe_type  = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<16)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<8)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0);
 			if(exe_type == CAN_BL_APP)
 			{
 				if((*((uint32_t *)APP_START_ADDR)!=0xFFFFFFFF))
@@ -316,4 +313,8 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		}
 		return;
 
+}
+unsigned short int Check_APP(uint32_t Addr)
+{
+	return 0;
 }
