@@ -151,6 +151,10 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 			{
 				SECT_num = SECT_num;
 			}
+			if(SECT_num >5 )
+			{
+				SECT_num = 5;
+			}
 			switch (SECT_num)
 			{
 				case 1:
