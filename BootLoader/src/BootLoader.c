@@ -16,6 +16,7 @@ u32 start_addr = 0x0000;//每一包数据的起始地址
 u32 data_size=0;//数据包的大小
 u32 data_index=0;//数据指针
 u16 crc_data;
+u32 FlashSize = (u32)0x00;
 uint32_t exe_type = 0x00;
 Boot_CMD_LIST cmd_list =
 {
@@ -134,7 +135,43 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 			ret =  CAN_BOOT_ErasePage(APP_EXE_FLAG_START_ADDR,APP_START_ADDR+FlashSize);
 			FLASH_Lock();
 			---------------------------------------------------------------------------------*/
-			ret = Flash_Erase(SECTORB|SECTORC|SECTORD|SECTORE|SECTORF,&Flash_Status);
+			FlashSize = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<0x18)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<0x10)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0x08)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[3])&0x000000FF)<<0x00);
+			FlashSize = FlashSize>>1;
+			u8 SECT_num = 0;
+			u32 SEC_temp = 0x00;
+			SECT_num = FlashSize/0x8000;
+			if(FlashSize%0x8000 != 0)
+			{
+				SECT_num = SECT_num+1;
+			}
+			else
+			{
+				SECT_num = SECT_num;
+			}
+			switch (SECT_num)
+			{
+				case 1:
+					SEC_temp = SECTORF;
+					break;
+				case 2:
+					SEC_temp = SECTORF|SECTORE;
+					break;
+				case 3:
+					SEC_temp = SECTORF|SECTORE|SECTORD;
+					break;
+				case 4:
+					SEC_temp = SECTORF|SECTORE|SECTORD|SECTORC;
+					break;
+				case 5:
+					SEC_temp = SECTORF|SECTORE|SECTORD|SECTORC|SECTORB;
+					break;
+				default:
+					break;
+			}
+			ret = Flash_Erase(SEC_temp,&Flash_Status);
 			__set_PRIMASK(0); //打开全局中断;
 			if(can_addr != 0x00)
 			{
@@ -163,15 +200,15 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		{
 			__set_PRIMASK(1);
 			//__disable_irq();
-			start_addr = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<24)|\
-						  (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<16)|\
-						  (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<8)|\
-						  (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[3])&0x000000FF)<<0);
+			start_addr = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<0x18)|\
+						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<0x10)|\
+						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0x08)|\
+						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[3])&0x000000FF)<<0x00);
 				//start_addr   = APP_START_ADDR+addr_offset;
-			data_size = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[4])&0xFFFFFFFF)<<24)|\
-						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[5])&0x00FFFFFF)<<16)|\
-					    (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[6])&0x0000FFFF)<<8)|\
-					    (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[7])&0x000000FF)<<0);
+			data_size = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[4])&0xFFFFFFFF)<<0x18)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[5])&0x00FFFFFF)<<0x10)|\
+					    (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[6])&0x0000FFFF)<<0x08)|\
+					    (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[7])&0x000000FF)<<0x00);
 			data_index   = 0;
 			__set_PRIMASK(0);
 
@@ -299,9 +336,9 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		//该命令在Bootloader和APP程序中都必须实现
 		if(can_cmd == cmd_list.Excute)//该命令在DSP中已经实现
 		{
-			exe_type  = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<16)|\
-						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<8)|\
-						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0);
+			exe_type  = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<0x10)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<0x08)|\
+						(((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0x00);
 			if(exe_type == CAN_BL_APP)
 			{
 				if((*((uint32_t *)APP_START_ADDR)!=0xFFFFFFFF))
