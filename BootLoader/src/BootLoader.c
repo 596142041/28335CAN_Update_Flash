@@ -31,7 +31,12 @@ Boot_CMD_LIST cmd_list =
 };
 Device_INFO DEVICE_INFO =
 {
-.FW_Version = 0x0010001,
+ .FW_Version = 0x0010001,
+ .FW_TYPE.bits.FW_TYPE = CAN_BL_BOOT,
+ .FW_TYPE.bits.Chip_Value = TMS320F28335,
+ .Device_addr.bits.Device_addr  = DEVICE_ADDR,
+ .Device_addr.bits.reserve = 0x00,
+
 };
 void __disable_irq(void)
 {
@@ -93,8 +98,6 @@ void CAN_BOOT_JumpToApplication(uint32_t Addr)
 void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 {
 	u8 i;
-	DEVICE_INFO.FW_TYPE.bits.FW_TYPE = 0x555555;
-	DEVICE_INFO.FW_TYPE.bits.Chip_Value = TMS320F28335;
 	CanTxMsg TxMessage;//发送对应消息
 	Uint16 ret = 0x01;
 	FLASH_ST Flash_Status;
