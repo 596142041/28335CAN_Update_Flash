@@ -86,8 +86,8 @@ unsigned short int CRCcalc16 (unsigned char *data,unsigned short int len)
 }
 void CAN_BOOT_JumpToApplication(uint32_t Addr)
 {
-	//  asm(" LB  0x310000");
-   // (*((void(*)(void))(Addr)))();
+	//  asm(" LB  0x310000"); //最开始采用的是汇编跳转方式,只能跳转为固定的地址
+   // (*((void(*)(void))(Addr)))();  //后续参考STM32的跳转方式
 	//(*(pFunction)(Addr))();
 	pFunction jump;
 	jump = (pFunction)(Addr);
