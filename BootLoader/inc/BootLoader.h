@@ -69,6 +69,7 @@ typedef struct _bootloader_data
 typedef struct _Boot_CMD_LIST
 {
 	//Bootloader相关命令
+	unsigned char Read;         //读取flash数据
 	unsigned char Erase;        //擦出APP储存扇区数据
 	unsigned char Write;        //以多字节形式写数据
 	unsigned char Check;        //检测节点是否在线，同时返回固件信息
