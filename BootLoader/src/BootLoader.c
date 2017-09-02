@@ -13,8 +13,8 @@ u8	   data_temp[DATA_LEN*2];
 Uint16 write_temp[DATA_LEN];
 Uint16 read_temp[READ_MAX];
 u8 can_cmd        = (u8 )0x00;//ID的bit0~bit3位为命令码
-u16 read_addr     = (u16)0x00;//读取数据起始地址
-u16 read_len      = (u16)0x00;//读取数据长度
+u32 read_addr     = (u16)0x00;//读取数据起始地址
+u32 read_len      = (u16)0x00;//读取数据长度
 u16 crc_data      = (u16)0x00;
 u16 can_addr      = (u16)0x00;;//ID的bit4~bit15位为节点地址
 u32 start_addr    = (u32)0x00;//每一包数据的起始地址
@@ -321,6 +321,15 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		//该命令在Bootloader和APP程序中国必须实现
 		if(can_cmd == cmd_list.Read)
 		{
+			if(pRxMessage->DLC != 8)
+			{
+				TxMessage.DLC                              = 0x02;
+				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = (u8)cmd_list.Read;//主版本号，两字节
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (u8)MSG_DATA_LEN_ERROR;
+				CAN_Tx_Msg(&TxMessage);
+				return;
+			}
 			read_addr =  (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<0x18)|\
 						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<0x10)|\
 						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0x08)|\
@@ -331,20 +340,61 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 					     (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[7])&0x000000FF)<<0x00);
 			if(read_len > READ_MAX)
 			{
-				TxMessage.DLC                              = 0x08;
+				TxMessage.DLC                              = 0x02;
 				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = (u8)cmd_list.Read;//主版本号，两字节
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (u8)READ_LEN_ERROR;
 				CAN_Tx_Msg(&TxMessage);
+				return;
 			}
+			u16 read_len_temp  = 0;
 			if(read_len%2 == 0)//因为每次只能读取N个字
 			{
-				read_len = read_len;
+				read_len_temp = read_len;
 			}
 			else
 			{
-				read_len = read_len+1;
+				read_len_temp = read_len+1;
 			}
+			read_len_temp = read_len_temp>>1;
+			__set_PRIMASK(1);
+			Flash_RD(read_addr,read_temp,read_len_temp);
+			__set_PRIMASK(0);
+			for(i = 0;i <read_len_temp;i++)
+			{
+				data_temp[i*2+0] = (read_temp[i]>>8)&0xFF;
+				data_temp[i*2+1] = read_temp[i]&0xFF;
+			}
+			data_index = 0;
+			i = 0;
+			while(data_index < read_len)
+			{
+				int temp;
+				temp = read_len - data_index;
+				if (temp >= 8)
+				{
+					TxMessage.DLC             = 0x08;
+					TxMessage.ExtId.bit.ExtId = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
+					for (i = 0; i < TxMessage.DLC; i++)
+					{
+						TxMessage.CAN_Tx_msg_data.msg_byte.data[i] = data_temp[data_index];
+						data_index++;
+					}
+
+				}
+				else
+				{
+					TxMessage.DLC             = temp;
+					TxMessage.ExtId.bit.ExtId = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
+					for (i = 0; i < TxMessage.DLC; i++)
+					{
+						TxMessage.CAN_Tx_msg_data.msg_byte.data[i] = data_temp[data_index];
+						data_index++;
+					}
+				}
+				CAN_Tx_Msg(&TxMessage);
+			}
+			data_index = 0;
 			return;
 		}
 		//CMD_List.Excute，控制程序跳转到指定地址执行
