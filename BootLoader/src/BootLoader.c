@@ -6,11 +6,15 @@
  */
 #include "BootLoader.h"
 #define DATA_LEN  520
+#define READ_MAX  256
 typedef  void (*pFunction)(void);
 bootloader_data Boot_ID_info;
 u8	   data_temp[DATA_LEN*2];
 Uint16 write_temp[DATA_LEN];
+Uint16 read_temp[READ_MAX];
 u8 can_cmd        = (u8 )0x00;//ID的bit0~bit3位为命令码
+u16 read_addr     = (u16)0x00;//读取数据起始地址
+u16 read_len      = (u16)0x00;//读取数据长度
 u16 crc_data      = (u16)0x00;
 u16 can_addr      = (u16)0x00;;//ID的bit4~bit15位为节点地址
 u32 start_addr    = (u32)0x00;//每一包数据的起始地址
@@ -120,7 +124,7 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 	{
 		TxMessage.ExtId.bit.ExtId = (0x0134<<CMD_WIDTH)|cmd_list.CmdFaild;
 		TxMessage.DLC = 1;
-		TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = 0x01;
+		TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = DEVICE_ADDR_ERROR;
 		CAN_Tx_Msg(&TxMessage);
 		return;
 	}
@@ -178,14 +182,15 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 				{
 					TxMessage.ExtId.bit.ExtId                  = (DEVICE_ADDR<<CMD_WIDTH)|cmd_list.CmdSuccess;
 					TxMessage.DLC                              = 1;
-					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = 1;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.Erase;;
 				}
 				else//擦除失败
 				{
 					TxMessage.ExtId.bit.ExtId                  = (DEVICE_ADDR<<CMD_WIDTH)|cmd_list.CmdFaild;
-					TxMessage.DLC                              = 2;
-					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = 2;
-					TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (ret&0xFF);
+					TxMessage.DLC                              = 3;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.Erase;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = ERASE_ERROR;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[2] = (ret&0xFF);
 				}
 				CAN_Tx_Msg(&TxMessage);
 			}
@@ -209,11 +214,19 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 			__set_PRIMASK(0);
 			if(can_addr != 0x00)
 			{
-				TxMessage.ExtId.bit.ExtId                  = (DEVICE_ADDR<<CMD_WIDTH)|cmd_list.CmdSuccess;
+				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
 				TxMessage.DLC                              = 1;
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = 3;
-				CAN_Tx_Msg(&TxMessage);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.WriteInfo;
 			}
+			else
+			{
+				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
+				TxMessage.DLC                              = 2;
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.WriteInfo;
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = DEVICE_ADDR_ERROR;
+			}
+			CAN_Tx_Msg(&TxMessage);
+			return;
 		}
 		//CMD_List.Write，先将数据存储在本地缓冲区中，然后计算数据的CRC，若校验正确则写数据到Flash中
 		//每次执行该数据，数据缓冲区的数据字节数会增加pRxMessage->DLC字节，
@@ -224,12 +237,10 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		{
 			if((data_index<data_size)&&(data_index<DATA_LEN*2))
 			{
-				__set_PRIMASK(1);//关闭全局中断
 				for(i=0;i<pRxMessage->DLC;i++)
 				{
 					data_temp[data_index++] =pRxMessage->CAN_Rx_msg_data.msg_byte.data[i];
 				}
-				__set_PRIMASK(0);//打开全局中断
 			}
 			if((data_index>=data_size)||(data_index>=(DATA_LEN*2-2)))
 			{
@@ -248,32 +259,31 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 					{
 						if(ret==STATUS_SUCCESS)//FLASH写入成功,再次进行CRC校验
 						{
-							TxMessage.ExtId.bit.ExtId                  = (CAN_BOOT_GetAddrData()<<CMD_WIDTH)|cmd_list.CmdSuccess;
-							TxMessage.DLC                              = 1;
-							TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = 0;
-							CAN_Tx_Msg(&TxMessage);
+							TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
+							TxMessage.DLC                              = 0x01;
+							TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.Write;
 						}
 						else
 						{
 							//写入错误
-							TxMessage.ExtId.bit.ExtId                  = (CAN_BOOT_GetAddrData()<<CMD_WIDTH)|cmd_list.CmdFaild;
-							TxMessage.DLC                              = 2;
-							TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = 4;
-							TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = ret&0xFF;
-							CAN_Tx_Msg(&TxMessage);
+							TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
+							TxMessage.DLC                              = 0x03;
+							TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.Write;
+							TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = WRITE_ERROR;
+							TxMessage.CAN_Tx_msg_data.msg_byte.data[2] = ret&0xFF;
 						}
 					}
 					else
 					{
 						//地址错误
-						TxMessage.ExtId.bit.ExtId                      = (CAN_BOOT_GetAddrData()<<CMD_WIDTH)|cmd_list.CmdFaild;
-						TxMessage.DLC                                  = 0x01;
-						TxMessage.CAN_Tx_msg_data.msg_byte.data[0]     = 0x05;
-						TxMessage.CAN_Tx_msg_data.msg_byte.data[1]     = 0x01;
-						CAN_Tx_Msg(&TxMessage);
+						TxMessage.ExtId.bit.ExtId                      = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
+						TxMessage.DLC                                  = 0x02;
+						TxMessage.CAN_Tx_msg_data.msg_byte.data[0]     = cmd_list.Write;
+						TxMessage.CAN_Tx_msg_data.msg_byte.data[1]     = DEVICE_ADDR_ERROR;
 					}
+					CAN_Tx_Msg(&TxMessage);
 				}
-			return;
+				return;
 			}
 		}
 		//CMD_List.Check，节点在线检测
@@ -283,8 +293,9 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		{
 			if(can_addr != 0x00)
 			{
+				TxMessage.DLC                              = 0x08;
 				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = (u8)(DEVICE_INFO.FW_Version>>24);;//主版本号，两字节
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = (u8)(DEVICE_INFO.FW_Version>>24);//主版本号，两字节
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (u8)(DEVICE_INFO.FW_Version>>16);
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[2] = (u8)(DEVICE_INFO.FW_Version>>8);//次版本号，两字节
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[3] = (u8)(DEVICE_INFO.FW_Version>>0);
@@ -292,16 +303,49 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[5] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>8);
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[6] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>0);
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[7] = (u8)(DEVICE_INFO.FW_TYPE.bits.Chip_Value>>0);
-				TxMessage.DLC = 8;
-				CAN_Tx_Msg(&TxMessage);
+
 			}
+			else
+			{
+				//地址错误
+				TxMessage.ExtId.bit.ExtId                      = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
+				TxMessage.DLC                                  = 0x02;
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[0]     = cmd_list.Check;
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[1]     = DEVICE_ADDR_ERROR;
+			}
+			CAN_Tx_Msg(&TxMessage);
+			return;
 		}
 		//cmd_list.read,读取flash数据,
 		//该命令是用于读取内部存储器数据
 		//该命令在Bootloader和APP程序中国必须实现
 		if(can_cmd == cmd_list.Read)
 		{
-
+			read_addr =  (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0xFFFFFFFF)<<0x18)|\
+						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<0x10)|\
+						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0x08)|\
+						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[3])&0x000000FF)<<0x00);
+			read_len  =  (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[4])&0xFFFFFFFF)<<0x18)|\
+						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[5])&0x00FFFFFF)<<0x10)|\
+					     (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[6])&0x0000FFFF)<<0x08)|\
+					     (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[7])&0x000000FF)<<0x00);
+			if(read_len > READ_MAX)
+			{
+				TxMessage.DLC                              = 0x08;
+				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = (u8)cmd_list.Read;//主版本号，两字节
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (u8)READ_LEN_ERROR;
+				CAN_Tx_Msg(&TxMessage);
+			}
+			if(read_len%2 == 0)//因为每次只能读取N个字
+			{
+				read_len = read_len;
+			}
+			else
+			{
+				read_len = read_len+1;
+			}
+			return;
 		}
 		//CMD_List.Excute，控制程序跳转到指定地址执行
 		//该命令在Bootloader和APP程序中都必须实现
