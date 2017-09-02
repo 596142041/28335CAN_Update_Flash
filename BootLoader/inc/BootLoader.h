@@ -18,15 +18,19 @@
 #define APP_INFO_ADDR   ((uint32_t)0x310000)
 #define CAN_BL_APP      0xAAAAAA
 #define CAN_BL_BOOT     0x555555
-//#define FW_TYPE         CAN_BL_BOOT
-#define DEVICE_ADDR 0x134//设备地址
-#define CAN_BOOT_GetAddrData() 0x0134
-#define CMD_WIDTH 4
-#define ADDR_WIDTH 12
+#define DEVICE_ADDR     0x134//设备地址
+#define CMD_WIDTH       0x04
+#define ADDR_WIDTH      0x0C
 //----------------------以下宏定义是对芯片型号进行宏定义----------------------------
-#define TMS320F28335      1
-#define TMS230F2808       2
-#define STM32F407IGT6     3
+#define TMS320F28335    0x01
+#define TMS230F2808     0x02
+#define STM32F407IGT6   0x03
+//---------------------------------------------------------------------------------
+//故障信息列表
+#define DEVICE_ADDR_ERROR  0xA0
+#define ERASE_ERROR        0xA1
+#define WRITE_ERROR        0xA2
+#define READ_LEN_ERROR     0xA3
 //---------------------------------------------------
 typedef struct _Device_INFO
 {
