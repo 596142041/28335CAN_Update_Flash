@@ -31,6 +31,7 @@
 #define ERASE_ERROR        0xA1
 #define WRITE_ERROR        0xA2
 #define READ_LEN_ERROR     0xA3
+#define MSG_DATA_LEN_ERROR 0xA4
 //---------------------------------------------------
 typedef struct _Device_INFO
 {
