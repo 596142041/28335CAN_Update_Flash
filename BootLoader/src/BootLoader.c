@@ -13,8 +13,8 @@ u8	   data_temp[DATA_LEN*2];
 Uint16 write_temp[DATA_LEN];
 Uint16 read_temp[READ_MAX];
 u8 can_cmd        = (u8 )0x00;//ID的bit0~bit3位为命令码
-u32 read_addr     = (u16)0x00;//读取数据起始地址
-u32 read_len      = (u16)0x00;//读取数据长度
+u32 read_addr     = (u32)0x00;//读取数据起始地址
+u32 read_len      = (u32)0x00;//读取数据长度
 u16 crc_data      = (u16)0x00;
 u16 can_addr      = (u16)0x00;;//ID的bit4~bit15位为节点地址
 u32 start_addr    = (u32)0x00;//每一包数据的起始地址
@@ -122,7 +122,7 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 	can_addr = Boot_ID_info.ExtId.bit.addr;
 	if((can_addr!=DEVICE_ADDR)&&(can_addr!=0))
 	{
-		TxMessage.ExtId.bit.ExtId = (0x0134<<CMD_WIDTH)|cmd_list.CmdFaild;
+		TxMessage.ExtId.bit.ExtId = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
 		TxMessage.DLC = 1;
 		TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = DEVICE_ADDR_ERROR;
 		CAN_Tx_Msg(&TxMessage);
@@ -180,13 +180,13 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 			{
 				if(ret==STATUS_SUCCESS)//擦除成功
 				{
-					TxMessage.ExtId.bit.ExtId                  = (DEVICE_ADDR<<CMD_WIDTH)|cmd_list.CmdSuccess;
+					TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
 					TxMessage.DLC                              = 1;
 					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.Erase;;
 				}
 				else//擦除失败
 				{
-					TxMessage.ExtId.bit.ExtId                  = (DEVICE_ADDR<<CMD_WIDTH)|cmd_list.CmdFaild;
+					TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
 					TxMessage.DLC                              = 3;
 					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.Erase;
 					TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = ERASE_ERROR;
