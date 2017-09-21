@@ -17,16 +17,14 @@
 #include "LED.h"
 int main(void)
 {
-	u8 i = 0;
 	DINT;
 	DRTM;
 	InitSysCtrl();
 	CAN_GPIO_Config(CANA);
 	LED_GPIO_Config();
-	
 	CsmUnlock();
 	InitPieCtrl();
-	IER = 0x0000;	// Disable CPU interrupts and clear all CPU interrupt flags:
+	IER = 0x0000;
 	IFR = 0x0000;
 	InitPieVectTable();
 	EALLOW;
@@ -37,6 +35,15 @@ int main(void)
 	MemCopy(&Flash28_API_LoadStart, &Flash28_API_LoadEnd,&Flash28_API_RunStart);
 	InitFlash();
 	FlashAPI_Init();
+	/*
+	FLASH_ST Flash_status;
+	Uint16 status = 0x0001;
+	//status = Flash_Verify((Uint16*)APP_INFO_ADDR,app_check,3,&Flash_status);
+	if(status == STATUS_SUCCESS)
+	{
+		CAN_BOOT_JumpToApplication(APP_START_ADDR);
+	}
+	*/
 	CAN_Config(CANA);
 	CAN_Rx_Config();
 	CAN_Rx_IT_Concig();
@@ -49,19 +56,6 @@ int main(void)
 	IER |= M_INT9;
 	IER |= M_INT1;
 	__enable_irq();
-	for(i = 0; i< 8;i++)
-	{
-		can_tx_msg.CAN_Tx_msg_data.msg_byte.data[i] =i;
-	}
-	can_tx_msg.CAN_num  = CANA;
-	can_tx_msg.DLC = 5;
-	can_tx_msg.ExtId.bit.ExtId = 0x1134522;
-	can_tx_msg.ExtId.bit.resved = 0x00;
-	can_tx_msg.IDE = CAN_ID_EXT;
-	can_tx_msg.MBox_num = 0x01;
-	can_tx_msg.SAE_J1939_Flag = 0;
-	can_tx_msg.StdId.all = 0x00;
-	can_tx_msg.Tx_timeout_cnt = 0x00;
 	while (1)
 	{
 		if(updata_info.time_out_flag == 0)
@@ -82,6 +76,5 @@ int main(void)
 		{
 			CAN_BOOT_JumpToApplication(APP_START_ADDR);
 		}
-
 	}
 }
