@@ -1,7 +1,7 @@
 /*
  * CANA.h
  *
- *  Created on: 2017Äê4ÔÂ16ÈÕ
+ *  Created on: 2017å¹´4æœˆ16æ—¥
  *      Author: admin
  */
 
@@ -14,8 +14,8 @@
 #include "stdint.h"
 #define USE_CANA  1
 #define USE_CANB  0
-#define CAN_Id_Standard   0//±íÊ¾±ê×¼Ö¡
-#define CAN_Id_Extended   1//±íÊ¾À©Õ¹Ö¡
+#define CAN_Id_Standard   0//è¡¨ç¤ºæ ‡å‡†å¸§
+#define CAN_Id_Extended   1//è¡¨ç¤ºæ‰©å±•å¸§
 #define CAN_ID_STD      CAN_Id_Standard
 #define CAN_ID_EXT      CAN_Id_Extended
 #define TXCOUNT 100
@@ -78,7 +78,7 @@ typedef struct
 			unsigned short int StdId :11;
 			unsigned short int resved :5;
 		} bit;
-	} StdId; //±ê×¼Ö¡ID
+	} StdId; //æ ‡å‡†å¸§ID
 	union
 	{
 		unsigned long int all;
@@ -87,29 +87,29 @@ typedef struct
 			unsigned long int ExtId :29;
 			unsigned long int resved :3;
 		} bit;
-	} ExtId; //À©Õ¹Ö¡ID
-	unsigned char SAE_J1939_Flag; //±íÊ¾ÊÇ·ñÊ¹ÓÃSAE J1939Ğ­Òé
+	} ExtId; //æ‰©å±•å¸§ID
+	unsigned char SAE_J1939_Flag; //è¡¨ç¤ºæ˜¯å¦ä½¿ç”¨SAE J1939åè®®
 	SAE_ID SAE_J1939_ID;
-	unsigned char IDE;   //Ö¡ÀàĞÍ,¿ÉÎª£ºCAN_ID_STD(±ê×¼Ö¡),CAN_ID_EXT(À©Õ¹Ö¡)
-	unsigned char DLC;  //Êı¾İ³¤¶È£¬¿ÉÎª0µ½8;
-	unsigned char MBox_num;  //ÓÊÏä±àºÅ,0-31
+	unsigned char IDE;   //å¸§ç±»å‹,å¯ä¸ºï¼šCAN_ID_STD(æ ‡å‡†å¸§),CAN_ID_EXT(æ‰©å±•å¸§)
+	unsigned char DLC;  //æ•°æ®é•¿åº¦ï¼Œå¯ä¸º0åˆ°8;
+	unsigned char MBox_num;  //é‚®ç®±ç¼–å·,0-31
 	unsigned short int Tx_timeout_cnt;
 	CAN_Num CAN_num;
 	UPDATE_State tx_update;
-	CAN_MSG_DATA CAN_Tx_msg_data; /*!< Ö¡ÏûÏ¢ÄÚÈİ,¹²8×Ö½Ú */
+	CAN_MSG_DATA CAN_Tx_msg_data; /*!< å¸§æ¶ˆæ¯å†…å®¹,å…±8å­—èŠ‚ */
 
 } CanTxMsg;
 typedef struct
 {
-	unsigned short int StdId;  //±ê×¼Ö¡ID,ÖµÎª0x000µ½0x7FFF;
-	unsigned long int ExtId; //À©Õ¹Ö¡ID,ÖµÎª0µ½0x1FFFFFFF
-	unsigned char SAE_J1939_Flag; //±íÊ¾ÊÇ·ñÊ¹ÓÃSAE J1939Ğ­Òé
+	unsigned short int StdId;  //æ ‡å‡†å¸§ID,å€¼ä¸º0x000åˆ°0x7FFF;
+	unsigned long int ExtId; //æ‰©å±•å¸§ID,å€¼ä¸º0åˆ°0x1FFFFFFF
+	unsigned char SAE_J1939_Flag; //è¡¨ç¤ºæ˜¯å¦ä½¿ç”¨SAE J1939åè®®
 	SAE_ID SAE_J1939_ID;
-	unsigned char IDE;   //Ö¡ÀàĞÍ,¿ÉÎª£ºCAN_ID_STD(±ê×¼Ö¡),CAN_ID_EXT(À©Õ¹Ö¡)
-	unsigned char DLC;  //Êı¾İ³¤¶È£¬¿ÉÎª0µ½8;
-	unsigned char MBox_num;  //·¢ËÍËùÓÃÓÊÏä±àºÅ
+	unsigned char IDE;   //å¸§ç±»å‹,å¯ä¸ºï¼šCAN_ID_STD(æ ‡å‡†å¸§),CAN_ID_EXT(æ‰©å±•å¸§)
+	unsigned char DLC;  //æ•°æ®é•¿åº¦ï¼Œå¯ä¸º0åˆ°8;
+	unsigned char MBox_num;  //å‘é€æ‰€ç”¨é‚®ç®±ç¼–å·
 	unsigned short int Rx_timeout_cnt;
-	CAN_MSG_DATA CAN_Rx_msg_data; /*!< Ö¡ÏûÏ¢ÄÚÈİ,¹²8×Ö½Ú */
+	CAN_MSG_DATA CAN_Rx_msg_data; /*!< å¸§æ¶ˆæ¯å†…å®¹,å…±8å­—èŠ‚ */
 	CAN_Num CAN_num;
 	UPDATE_State rx_update;
 } CanRxMsg;
@@ -117,8 +117,8 @@ typedef struct
 
 void CAN_GPIO_Config(CAN_Num CAN);
 void CAN_Config(CAN_Num CAN);
-void CAN_Tx_Msg(CanTxMsg *can_tx_msg);  //·¢ËÍÏûÏ¢
-void CAN_Rx_Msg(CanRxMsg *can_rx_msg);  //½ÓÊÕÏûÏ¢
+void CAN_Tx_Msg(CanTxMsg *can_tx_msg);  //å‘é€æ¶ˆæ¯
+void CAN_Rx_Msg(CanRxMsg *can_rx_msg);  //æ¥æ”¶æ¶ˆæ¯
 #if USE_CANA
 static void CANA_RX_Config(void);
 #endif
