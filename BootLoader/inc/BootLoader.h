@@ -1,7 +1,7 @@
 /*
  * BootLoader.h
  *
- *  Created on: 2017Äê4ÔÂ19ÈÕ
+ *  Created on: 2017å¹´4æœˆ19æ—¥
  *      Author: admin
  */
 
@@ -18,21 +18,25 @@
 #define APP_INFO_ADDR   ((uint32_t)0x310000)
 #define CAN_BL_APP      0xAAAAAA
 #define CAN_BL_BOOT     0x555555
-#define DEVICE_ADDR     0x134//Éè±¸µØÖ·
+#define DEVICE_ADDR     0x134//è®¾å¤‡åœ°å€
 #define CMD_WIDTH       0x04
 #define ADDR_WIDTH      0x0C
-//----------------------ÒÔÏÂºê¶¨ÒåÊÇ¶ÔĞ¾Æ¬ĞÍºÅ½øĞĞºê¶¨Òå----------------------------
+//----------------------ä»¥ä¸‹å®å®šä¹‰æ˜¯å¯¹èŠ¯ç‰‡å‹å·è¿›è¡Œå®å®šä¹‰----------------------------
 #define TMS320F28335    0x01
 #define TMS230F2808     0x02
 #define STM32F407IGT6   0x03
 //---------------------------------------------------------------------------------
-//¹ÊÕÏĞÅÏ¢ÁĞ±í
+//æ•…éšœä¿¡æ¯åˆ—è¡¨
 #define DEVICE_ADDR_ERROR  0xA0
 #define ERASE_ERROR        0xA1
 #define WRITE_ERROR        0xA2
 #define READ_LEN_ERROR     0xA3
 #define MSG_DATA_LEN_ERROR 0xA4
+#define FILE_TYPE_ERROR    0xA5
 //---------------------------------------------------
+#define File_None 0xF0
+#define File_bin  0xF1
+#define  File_hex 0xF2
 typedef struct _Device_INFO
 {
 	union
@@ -42,18 +46,18 @@ typedef struct _Device_INFO
 		{
 			unsigned short int Device_addr:	12;
 			unsigned short int reserve:	4;
-		}bits;//Éè±¸µØÖ·
+		}bits;//è®¾å¤‡åœ°å€
 	}Device_addr;
 	union
 	{
 		unsigned long int all;
 		struct
 		{
-			unsigned long int FW_TYPE:24;//¹Ì¼şÀàĞÍ
-			unsigned long int Chip_Value:8;//¿ØÖÆÆ÷Ğ¾Æ¬ÀàĞÍ
+			unsigned long int FW_TYPE:24;//å›ºä»¶ç±»å‹
+			unsigned long int Chip_Value:8;//æ§åˆ¶å™¨èŠ¯ç‰‡ç±»å‹
 		}bits;
 	}FW_TYPE;
-	unsigned long int FW_Version;//¹Ì¼ş°æ±¾
+	unsigned long int FW_Version;//å›ºä»¶ç‰ˆæœ¬
 }Device_INFO;
 typedef struct _bootloader_data
 {
@@ -62,34 +66,35 @@ typedef struct _bootloader_data
 		u32 all;
 		struct
 		{
-			u16 cmd :CMD_WIDTH; //ÃüÁî
-			u16 addr :ADDR_WIDTH; //Éè±¸µØÖ·
-			u16 reserve :16; //±£ÁôÎ»
+			u16 cmd :CMD_WIDTH; //å‘½ä»¤
+			u16 addr :ADDR_WIDTH; //è®¾å¤‡åœ°å€
+			u16 reserve :16; //ä¿ç•™ä½
 		} bit;
-	} ExtId; //À©Õ¹Ö¡ID
-	unsigned char IDE;   //Ö¡ÀàĞÍ,¿ÉÎª£ºCAN_ID_STD(±ê×¼Ö¡),CAN_ID_EXT(À©Õ¹Ö¡)
-	unsigned char DLC;  //Êı¾İ³¤¶È£¬¿ÉÎª0µ½8;
+	} ExtId; //æ‰©å±•å¸§ID
+	unsigned char IDE;   //å¸§ç±»å‹,å¯ä¸ºï¼šCAN_ID_STD(æ ‡å‡†å¸§),CAN_ID_EXT(æ‰©å±•å¸§)
+	unsigned char DLC;  //æ•°æ®é•¿åº¦ï¼Œå¯ä¸º0åˆ°8;
 	u8 data[8];
 } bootloader_data;
 typedef struct _Boot_CMD_LIST
 {
-	//BootloaderÏà¹ØÃüÁî
-	unsigned char Read;         //¶ÁÈ¡flashÊı¾İ
-	unsigned char Erase;        //²Á³öAPP´¢´æÉÈÇøÊı¾İ
-	unsigned char Write;        //ÒÔ¶à×Ö½ÚĞÎÊ½Ğ´Êı¾İ
-	unsigned char Check;        //¼ì²â½ÚµãÊÇ·ñÔÚÏß£¬Í¬Ê±·µ»Ø¹Ì¼şĞÅÏ¢
-	unsigned char Excute;       //Ö´ĞĞ¹Ì¼ş
-	unsigned char WriteInfo;    //ÉèÖÃ¶à×Ö½ÚĞ´Êı¾İÏà¹Ø²ÎÊı£¨Ğ´ÆğÊ¼µØÖ·£¬Êı¾İÁ¿£©
-	unsigned char SetBaudRate;  //ÉèÖÃ½Úµã²¨ÌØÂÊ
-	//½Úµã·µ»Ø×´Ì¬,¹Ø¼ü
-	unsigned char CmdFaild;     //ÃüÁîÖ´ĞĞÊ§°Ü
-	unsigned char CmdSuccess;   //ÃüÁîÖ´ĞĞ³É¹¦
+	//Bootloaderç›¸å…³å‘½ä»¤
+	unsigned char Read;         //è¯»å–flashæ•°æ®
+	unsigned char Erase;        //æ“¦å‡ºAPPå‚¨å­˜æ‰‡åŒºæ•°æ®
+	unsigned char Write;        //ä»¥å¤šå­—èŠ‚å½¢å¼å†™æ•°æ®
+	unsigned char Check;        //æ£€æµ‹èŠ‚ç‚¹æ˜¯å¦åœ¨çº¿ï¼ŒåŒæ—¶è¿”å›å›ºä»¶ä¿¡æ¯
+	unsigned char Excute;       //æ‰§è¡Œå›ºä»¶
+	unsigned char WriteInfo;    //è®¾ç½®å¤šå­—èŠ‚å†™æ•°æ®ç›¸å…³å‚æ•°ï¼ˆå†™èµ·å§‹åœ°å€ï¼Œæ•°æ®é‡ï¼‰
+	unsigned char SetBaudRate;  //è®¾ç½®èŠ‚ç‚¹æ³¢ç‰¹ç‡
+	//èŠ‚ç‚¹è¿”å›çŠ¶æ€,å…³é”®
+	unsigned char CmdFaild;     //å‘½ä»¤æ‰§è¡Œå¤±è´¥
+	unsigned char CmdSuccess;   //å‘½ä»¤æ‰§è¡ŒæˆåŠŸ
 
 
 } Boot_CMD_LIST;
 extern Boot_CMD_LIST cmd_list;
 extern bootloader_data Bootloader_data;
 extern Device_INFO DEVICE_INFO;
+extern Uint16 app_check[3] ;
 void __disable_irq(void);
 void __enable_irq(void);
 void __set_PRIMASK(u8 state);
