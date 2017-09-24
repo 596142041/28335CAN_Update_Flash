@@ -142,7 +142,8 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 						   (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0x08)|\
 						   (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[3])&0x000000FF)<<0x00);
 			FlashSize    = FlashSize>>1;
-			u8 SECT_num  = 0;
+			file_type  =  pRxMessage->CAN_Rx_msg_data.msg_Byte.byte4;
+			u8  SECT_num = 0;
 			u32 SEC_temp = 0x00;
 			SECT_num     = FlashSize/0x8000;
 			if(FlashSize%0x8000 != 0)
@@ -209,9 +210,9 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		if(can_cmd == cmd_list.WriteInfo)
 		{
 			__set_PRIMASK(1);
-			file_type  =  pRxMessage->CAN_Rx_msg_data.msg_Byte.byte0;
 			data_index = 0;
-			start_addr = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<0x10)|\
+			start_addr = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[0])&0x00FFFFFF)<<0x18)|\
+					     (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[1])&0x00FFFFFF)<<0x10)|\
 						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[2])&0x0000FFFF)<<0x08)|\
 						 (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[3])&0x000000FF)<<0x00);
 			data_size  = (((u32)(pRxMessage->CAN_Rx_msg_data.msg_byte.data[4])&0xFFFFFFFF)<<0x18)|\
