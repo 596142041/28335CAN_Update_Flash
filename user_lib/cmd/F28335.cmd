@@ -12,6 +12,7 @@ MEMORY
 	ZONE7A : origin = 0x0200000, length = 0x00FC00 /* XINTF zone 7 - program space */
 	/*-----------------------------------------------------------------------------*/
 	FLASHH : origin = 0x300000, length = 0x008000
+	/*-----------------------------------------------------------------------------*/
 	FLASHG : origin = 0x308000, length = 0x008000
 	FLASHF : origin = 0x310000, length = 0x008000
 	FLASHE : origin = 0x318000, length = 0x008000
@@ -20,7 +21,7 @@ MEMORY
 	FLASHB : origin = 0x330000, length = 0x008000
 	FLASHA : origin = 0x338000, length = 0x007F80
 	/*-----------------------------------------------------------------------------*/
-	CSM_RSVD : origin = 0x33FF80, length = 0x000076 /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
+	CSM_RSVD  : origin = 0x33FF80, length = 0x000076 /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
 	BEGIN     : origin = 0x33FFF6, length = 0x000002 /* Part of FLASHA.  Used for "boot to Flash" bootloader mode. */
 	CSM_PWL   : origin = 0x33FFF8, length = 0x000008 /* Part of FLASHA.  CSM password locations in FLASHA */
 	OTP       : origin = 0x380400, length = 0x000400 /* on-chip OTP */
