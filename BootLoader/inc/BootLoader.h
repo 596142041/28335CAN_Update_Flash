@@ -14,7 +14,11 @@
 #include "stdint.h"
 #include "CANA.h"
 #include "Flash.h"
-#define APP_START_ADDR  ((uint32_t)0x310010)
+#define DATA_LEN  520   //缓存数组长度
+#define READ_MAX  256   //每次读取数据的最大长度,16位数据
+#define APP_START_ADDR       ((uint32_t)0x310010)
+#define APP_Write_START_ADDR ((uint32_t)0x310000)
+#define APP_Write_END_ADDR   ((uint32_t)0x33FF80)
 #define APP_INFO_ADDR   ((uint32_t)0x310000)
 #define CAN_BL_APP      0xAAAAAA
 #define CAN_BL_BOOT     0x555555
@@ -33,10 +37,14 @@
 #define READ_LEN_ERROR     0xA3
 #define MSG_DATA_LEN_ERROR 0xA4
 #define FILE_TYPE_ERROR    0xA5
+#define CRC_ERROR          0xA6
+#define FLASH_ADDR_ERROR   0xA7
+#define WRITE_LEN_ERROR    0xA8
 //---------------------------------------------------
 #define File_None 0xF0
 #define File_bin  0xF1
-#define  File_hex 0xF2
+#define File_hex  0xF2
+typedef void (*pFunction)(void);
 typedef struct _Device_INFO
 {
 	union

@@ -5,14 +5,10 @@
  *      Author: admin
  */
 #include "BootLoader.h"
-#define DATA_LEN  520
-#define READ_MAX  256
-typedef  void (*pFunction)(void);
 bootloader_data Boot_ID_info;
 u8	   data_temp[DATA_LEN*2];
 Uint16 write_temp[DATA_LEN];
 Uint16 read_temp[READ_MAX];
-
 u8 can_cmd          = (u8 )0x00;//ID的bit0~bit3位为命令码
 u32 read_addr       = (u32)0x00;//读取数据起始地址
 u32 read_len        = (u32)0x00;//读取数据长度
@@ -222,15 +218,40 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 			__set_PRIMASK(0);
 			if(can_addr != 0x00)
 			{
-				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
-				TxMessage.DLC                              = 1;
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.WriteInfo;
-				CAN_Tx_Msg(&TxMessage);
-				return;
+				if(start_addr<APP_Write_START_ADDR||start_addr>APP_Write_END_ADDR)
+				{
+					TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|\
+																 cmd_list.CmdFaild;
+					TxMessage.DLC                              = 2;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.WriteInfo;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = FLASH_ADDR_ERROR;
+					CAN_Tx_Msg(&TxMessage);
+					return;
+				}
+				else if(data_size > DATA_LEN<<1)
+				{
+					TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|\
+																 cmd_list.CmdFaild;
+					TxMessage.DLC                              = 2;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.WriteInfo;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = WRITE_LEN_ERROR;
+					CAN_Tx_Msg(&TxMessage);
+					return;
+				}
+				else
+				{
+					TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|\
+																 cmd_list.CmdSuccess;
+					TxMessage.DLC                              = 1;
+					TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.WriteInfo;
+					CAN_Tx_Msg(&TxMessage);
+					return;
+				}
 			}
 			else
 			{
-				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
+				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|\
+												             cmd_list.CmdSuccess;
 				TxMessage.DLC                              = 2;
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = cmd_list.WriteInfo;
 				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = DEVICE_ADDR_ERROR;
@@ -299,6 +320,16 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 							CAN_Tx_Msg(&TxMessage);
 							return;
 						}
+					}
+					else
+					{
+							TxMessage.ExtId.bit.ExtId                      = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdFaild;
+							TxMessage.DLC                                  = 0x02;
+							TxMessage.CAN_Tx_msg_data.msg_byte.data[0]     = cmd_list.Write;
+							TxMessage.CAN_Tx_msg_data.msg_byte.data[1]     = CRC_ERROR;
+							CAN_Tx_Msg(&TxMessage);
+							return;
+
 					}
 
 				}
