@@ -1,16 +1,16 @@
 /*
  * main.c
  *
- *  Created on: 2017Äê4ÔÂ16ÈÕ
+ *  Created on: 2017å¹´4æœˆ16æ—¥
  *      Author: admin
  */
 /**
- *ÕûÌåµÄË¼Â·ÊÇ:
- * µÚÒ»²½:Ñù×ÓFLASHµÄÊý¾ÝÐ´ÈëºÍ²Á³ý;
- * µÚ¶þ²½:ÑéÖ¤CAN×ÜÏß½ÓÊÕÊý¾Ý;
- * µÚÈý²½:¸ù¾ÝÇ°ÃæµÄ²½Öè½øÐÐ×îºó×ÛºÏ
- * µÚÒ»²½ÑéÖ¤FLASH¹¦ÄÜº¯Êý»ù±¾½áÊø;
- * ÐèÒªÌí¼ÓÁ½¸ö¹¦ÄÜº¯Êý:´ÓÄ³¸öµØÖ·Ð´ÈëºÍ´ÓÄ³¸öµØÖ·¶Á³öµÄº¯Êý
+ *æ•´ä½“çš„æ€è·¯æ˜¯:
+ * ç¬¬ä¸€æ­¥:æ ·å­FLASHçš„æ•°æ®å†™å…¥å’Œæ“¦é™¤;
+ * ç¬¬äºŒæ­¥:éªŒè¯CANæ€»çº¿æŽ¥æ”¶æ•°æ®;
+ * ç¬¬ä¸‰æ­¥:æ ¹æ®å‰é¢çš„æ­¥éª¤è¿›è¡Œæœ€åŽç»¼åˆ
+ * ç¬¬ä¸€æ­¥éªŒè¯FLASHåŠŸèƒ½å‡½æ•°åŸºæœ¬ç»“æŸ;
+ * éœ€è¦æ·»åŠ ä¸¤ä¸ªåŠŸèƒ½å‡½æ•°:ä»ŽæŸä¸ªåœ°å€å†™å…¥å’Œä»ŽæŸä¸ªåœ°å€è¯»å‡ºçš„å‡½æ•°
  ***************************************/
 #include "main.h"
 #include "BootLoader.h"
@@ -47,12 +47,12 @@ int main(void)
 	CAN_Config(CANA);
 	CAN_Rx_Config();
 	CAN_Rx_IT_Concig();
-	//ÅäÖÃLEDÖ¸Ê¾µÆ
+	//é…ç½®LEDæŒ‡ç¤ºç¯
 	LED_Timer_Config();
 	//------------------------------------
-	//ÅäÖÃÖÐ¶Ï
+	//é…ç½®ä¸­æ–­
 	PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
-	PieCtrlRegs.PIEIER9.bit.INTx6 = 1; //CANAµÄÖÐ¶Ï1
+	PieCtrlRegs.PIEIER9.bit.INTx6 = 1; //CANAçš„ä¸­æ–­1
 	IER |= M_INT9;
 	IER |= M_INT1;
 	__enable_irq();
