@@ -21,6 +21,7 @@ u32 FlashSize       = (u32)0x00;
 uint32_t exe_type   = (u32)0x00;
 u8 file_type = File_None;
 Uint16 app_check[3] = {0xFFFF,0xFFFF,0xF5F4};
+
 Boot_CMD_LIST cmd_list =
 {
 	.Read        = 0x0A, //读取flash数据
@@ -35,19 +36,26 @@ Boot_CMD_LIST cmd_list =
 };
 Device_INFO DEVICE_INFO =
 {
+
+ .FW_Version.bits.Version       = 31,
+ .FW_Version.bits.date          = 31,
+ .FW_Version.bits.month         = 12,
+ .FW_Version.bits.year          = 2017,
  .Device_addr.bits.reserve      = 0x00,
- .FW_Version                    = 0x0010101,
- .FW_TYPE.bits.FW_TYPE          = CAN_BL_BOOT,
+ .FW_TYPE.bits.FW_type          = CAN_BL_BOOT,
  .FW_TYPE.bits.Chip_Value       = TMS320F28335,
  .Device_addr.bits.Device_addr  = DEVICE_ADDR,
 };
+//关于全局中断相关操作主要是为了和STM32保持一致,便于一致代码
 void __disable_irq(void)
 {
+	//关闭全局中断
 	DINT;
 	DRTM;
 }
 void __enable_irq(void)
 {
+	//打开全局中断
 	EINT;
 	ERTM;
 }
@@ -55,11 +63,11 @@ void __set_PRIMASK(u8 state)
 {
 	if(state == 1)
 	{
-		__disable_irq();
+		__disable_irq();//关闭全局中断
 	}
 	else if(state == 0)
 	{
-		__enable_irq();
+		__enable_irq();//打开全局中断
 	}
 	else
 	{
@@ -116,7 +124,7 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 	TxMessage.Tx_timeout_cnt   = 0x00;
 	TxMessage.SAE_J1939_Flag   = 0;
 	//获取地址信息
-	Boot_ID_info.ExtId.all     = pRxMessage->ExtId;
+	Boot_ID_info.ExtId.all     = pRxMessage->ExtId.bit.ExtId;
 	can_cmd = Boot_ID_info.ExtId.bit.cmd;
 	can_addr = Boot_ID_info.ExtId.bit.addr;
 	if((can_addr!=DEVICE_ADDR)&&(can_addr!=0))
@@ -329,7 +337,6 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 							TxMessage.CAN_Tx_msg_data.msg_byte.data[1]     = CRC_ERROR;
 							CAN_Tx_Msg(&TxMessage);
 							return;
-
 					}
 
 				}
@@ -355,14 +362,14 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 			{
 				TxMessage.DLC                              = 0x08;
 				TxMessage.ExtId.bit.ExtId                  = (DEVICE_INFO.Device_addr.bits.Device_addr<<CMD_WIDTH)|cmd_list.CmdSuccess;
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = (u8)(DEVICE_INFO.FW_Version>>24);//主版本号，两字节
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (u8)(DEVICE_INFO.FW_Version>>16);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[2] = (u8)(DEVICE_INFO.FW_Version>>8);//次版本号，两字节
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[3] = (u8)(DEVICE_INFO.FW_Version>>0);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[4] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>16);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[5] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>8);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[6] = (u8)(DEVICE_INFO.FW_TYPE.bits.FW_TYPE>>0);
-				TxMessage.CAN_Tx_msg_data.msg_byte.data[7] = (u8)(DEVICE_INFO.FW_TYPE.bits.Chip_Value>>0);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[0] = (u8)((DEVICE_INFO.FW_Version.all>>0x18)&0xFF);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[1] = (u8)((DEVICE_INFO.FW_Version.all>>0x10)&0xFF);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[2] = (u8)((DEVICE_INFO.FW_Version.all>>0x08)&0xFF);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[3] = (u8)((DEVICE_INFO.FW_Version.all>>0x00)&0xFF);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[4] = (u8)((DEVICE_INFO.FW_TYPE.bits.FW_type>>0x10)&0xFF);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[5] = (u8)((DEVICE_INFO.FW_TYPE.bits.FW_type>>0x08)&0xFF);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[6] = (u8)((DEVICE_INFO.FW_TYPE.bits.FW_type>>0x00)&0xFF);
+				TxMessage.CAN_Tx_msg_data.msg_byte.data[7] = (u8)((DEVICE_INFO.FW_TYPE.bits.Chip_Value>>0)&0xFF);
 				CAN_Tx_Msg(&TxMessage);
 				return;
 			}
