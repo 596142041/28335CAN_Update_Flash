@@ -5,14 +5,42 @@
  *      Author: admin
  */
 #include "CANA.h"
+CANBus_Baudrate CANBus_Baudrate_table[27] =
+{
+#if CPU_FRQ_150MHZ
+		{4,2,10,1000},//1000Kbps
+		{9,2,5,750},//750Kbps
+		{24,0,1,600},//600Kbps
+		{9,2,10,500},//500Kbps
+		{19,2,10,250},//250Kbps
+		{24,2,10,200},//200Kbps
+#endif
+
+#if CPU_FRQ_100MHZ
+
+#endif
+
+};
 CanRxMsg can_rx_msg =
 {
+	.DLC       = 8,
+	.ExtId     = 0x00,
+	.CAN_num   = CANA,
+	.IDE       = CAN_ID_EXT,
 	.rx_update = NON_CHANGE,
-	.CAN_num = CANA,
-	.DLC = 8,
-	.ExtId = 0x00,
-	.IDE = CAN_ID_EXT,
 };
+int CAN_GetBaudRateNum(unsigned int BaudRate)
+{
+
+	for(int i=0;i<27;i++)
+	{
+		if(BaudRate == CANBus_Baudrate_table[i].BaudRate)
+		 {
+			return i;
+		}
+	}
+	return 0;
+}
 void CAN_GPIO_Config(CAN_Num CAN)
 {
 
@@ -42,7 +70,7 @@ void CAN_GPIO_Config(CAN_Num CAN)
 	}
 
 }
-void CAN_Config(CAN_Num CAN)
+void CAN_Config(CAN_Num CAN,unsigned short int  BaudRate)
 {
 	struct ECAN_REGS ECan_Reg_Shadow;
 	//-------------------------
@@ -145,12 +173,9 @@ void CAN_Config(CAN_Num CAN)
 	while (ECan_Reg_Shadow.CANES.bit.CCE != 1);  // Wait for CCE bit to be set..
 	ECan_Reg_Shadow.CANBTC.all = 0;
 #if (CPU_FRQ_150MHZ)
-	/********************************************************
-	 *CAN通讯波特率设置为500kbps
-	 *******************************************************/
-	ECan_Reg_Shadow.CANBTC.bit.BRPREG = 9;
-	ECan_Reg_Shadow.CANBTC.bit.TSEG2REG = 2;
-	ECan_Reg_Shadow.CANBTC.bit.TSEG1REG = 10;
+	ECan_Reg_Shadow.CANBTC.bit.BRPREG   = CANBus_Baudrate_table[CAN_GetBaudRateNum(BaudRate)].BRPREG;
+	ECan_Reg_Shadow.CANBTC.bit.TSEG2REG = CANBus_Baudrate_table[CAN_GetBaudRateNum(BaudRate)].TSEG2REG;
+	ECan_Reg_Shadow.CANBTC.bit.TSEG1REG = CANBus_Baudrate_table[CAN_GetBaudRateNum(BaudRate)].TSEG1REG;
 #endif
 	ECan_Reg_Shadow.CANBTC.bit.SAM = 1;
 	ECanReg->CANBTC.all = ECan_Reg_Shadow.CANBTC.all;
@@ -211,7 +236,7 @@ void CAN_Tx_Msg(CanTxMsg *can_tx_msg)  //发送消息
 		}
 		else
 		{
-			Mailbox->MSGID.all = can_tx_msg->SAE_J1939_ID.id; //extended identifier.
+			Mailbox->MSGID.all = can_tx_msg->SAE_J1939_ID.all; //extended identifier.
 			Mailbox->MSGID.bit.IDE = can_tx_msg->IDE;
 		}
 	}
@@ -262,12 +287,12 @@ void CAN_Rx_Msg(CanRxMsg *can_rx_msg)  //接收消息
 		can_rx_msg->IDE = Mailbox->MSGID.bit.IDE;
 		if(can_rx_msg->IDE == CAN_ID_EXT)
 		{
-			can_rx_msg->ExtId = Mailbox->MSGID.all&0x1FFFFFFF;
-			can_rx_msg->SAE_J1939_ID.id = can_rx_msg->ExtId;
+			can_rx_msg->ExtId.bit.ExtId = Mailbox->MSGID.all&0x1FFFFFFF;
+			can_rx_msg->SAE_J1939_ID.all = can_rx_msg->ExtId.bit.ExtId;
 		}
 		else if(can_rx_msg->IDE == CAN_ID_STD)
 		{
-			can_rx_msg->StdId = Mailbox->MSGID.bit.STDMSGID;
+			can_rx_msg->StdId.bit.StdId = Mailbox->MSGID.bit.STDMSGID;
 		}
 		can_rx_msg->CAN_Rx_msg_data.msg_Byte.byte0 = Mailbox->MDL.byte.BYTE0;
 		can_rx_msg->CAN_Rx_msg_data.msg_Byte.byte1 = Mailbox->MDL.byte.BYTE1;
@@ -415,12 +440,12 @@ __interrupt void Ecana_isr1(void)
 			can_rx_msg.IDE = ECanaMboxes.MBOX31.MSGID.bit.IDE;
 			if(can_rx_msg.IDE == CAN_ID_EXT)
 			{
-				can_rx_msg.ExtId = ECanaMboxes.MBOX31.MSGID.all&0x1FFFFFFF;
-				can_rx_msg.SAE_J1939_ID.id = can_rx_msg.ExtId;
+				can_rx_msg.ExtId.bit.ExtId = ECanaMboxes.MBOX31.MSGID.all&0x1FFFFFFF;
+				can_rx_msg.SAE_J1939_ID.all = can_rx_msg.ExtId.all;
 			}
 			else if(can_rx_msg.IDE == CAN_ID_STD)
 			{
-				can_rx_msg.StdId = ECanaMboxes.MBOX31.MSGID.bit.STDMSGID;
+				can_rx_msg.StdId.bit.StdId = ECanaMboxes.MBOX31.MSGID.bit.STDMSGID;
 			}
 		   can_rx_msg.CAN_Rx_msg_data.msg_Byte.byte0 = ECanaMboxes.MBOX31.MDL.byte.BYTE0;
 		   can_rx_msg.CAN_Rx_msg_data.msg_Byte.byte1 = ECanaMboxes.MBOX31.MDL.byte.BYTE1;
