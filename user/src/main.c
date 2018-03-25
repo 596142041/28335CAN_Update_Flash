@@ -4,14 +4,14 @@
  *  Created on: 2017年4月16日
  *      Author: admin
  */
-/**
+/*****************************************************************
  *整体的思路是:
  * 第一步:样子FLASH的数据写入和擦除;
  * 第二步:验证CAN总线接收数据;
  * 第三步:根据前面的步骤进行最后综合
  * 第一步验证FLASH功能函数基本结束;
  * 需要添加两个功能函数:从某个地址写入和从某个地址读出的函数
- ***************************************/
+ *****************************************************************/
 #include "main.h"
 #include "BootLoader.h"
 #include "LED.h"
@@ -38,13 +38,13 @@ int main(void)
 	/*
 	FLASH_ST Flash_status;
 	Uint16 status = 0x0001;
-	//status = Flash_Verify((Uint16*)APP_INFO_ADDR,app_check,3,&Flash_status);
+	status = Flash_Verify((Uint16*)APP_INFO_ADDR,app_check,3,&Flash_status);
 	if(status == STATUS_SUCCESS)
 	{
 		CAN_BOOT_JumpToApplication(APP_START_ADDR);
 	}
 	*/
-	CAN_Config(CANA);
+	CAN_Config(CANA,500);
 	CAN_Rx_Config();
 	CAN_Rx_IT_Concig();
 	//配置LED指示灯
